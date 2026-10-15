@@ -1,0 +1,6 @@
+# Oriental Essence (OE)
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://oe-brand.app.workbuddy.host/sitemap.xml
