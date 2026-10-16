@@ -2,20 +2,26 @@
  * 云服务公共配置 —— 唯一允许出现在前端代码里的凭据。
  * endpoint / publishableKey 均取自 workbuddy_cloud_service 返回的 publicConfig。
  * publishableKey 仅标识应用、本身不带权限，服务端按来源域名精确校验。
+ *
+ * `VITE_API_BASE`：数据接口前缀，构建期注入。
+ * · 未设置 → 直连托管域（WorkBuddy 自托管时行为与以前完全一致）。
+ * · 设为 `/api` → 走同域反向代理（Cloudflare Pages Functions 转发到数据面），
+ *   用于站点部署在自有域名（如 ores.cc）时绕开数据面的跨域白名单限制。
  */
 export const publicConfig = {
-  endpoint: 'https://oe-brand.app.workbuddy.host',
+  endpoint: (import.meta.env.VITE_API_BASE as string | undefined) || 'https://oe-brand.app.workbuddy.host',
   publishableKey: 'wbpk_LBkK4tO5FUutWDujrDXhyb_jYM6R3tvM50Zst8HehG43terKRDr3fET',
 }
 
 /**
  * 站点规范域 —— canonical / sitemap / og:url 都用它。
  *
- * ⚠️ 必须是**实际托管站点的域名**。ores.cc 现在只是 301 入口（对外推广用），
- * 它不承载站点内容；把 canonical 指过去会与 301 落点互相矛盾，白丢收录信号。
- * 如果将来把站点直接绑定到 ores.cc，只改这一行 + 重跑预渲染即可切换。
+ * ⚠️ 必须是**实际托管站点的域名**：canonical 指向别处会与 301 落点互相矛盾，白丢收录信号。
+ * 站点迁到自有域名后，构建期注入 `VITE_SITE_ORIGIN=https://ores.cc` 即可切换，
+ * 无需改代码；切换后需重跑预渲染与 sitemap 生成。
  */
-export const SITE_ORIGIN = 'https://oe-brand.app.workbuddy.host'
+export const SITE_ORIGIN =
+  (import.meta.env.VITE_SITE_ORIGIN as string | undefined) || 'https://oe-brand.app.workbuddy.host'
 
 /** 采购平台顺序与展示名 */
 export const PLATFORMS = [
