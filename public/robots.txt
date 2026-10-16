@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://oe-brand.app.workbuddy.host/sitemap.xml
+Sitemap: https://ores.cc/sitemap.xml
