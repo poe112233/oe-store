@@ -5,11 +5,26 @@
  *
  * `VITE_API_BASE`：数据接口前缀，构建期注入。
  * · 未设置 → 直连托管域（WorkBuddy 自托管时行为与以前完全一致）。
- * · 设为 `/api` → 走同域反向代理（Cloudflare Pages Functions 转发到数据面），
- *   用于站点部署在自有域名（如 ores.cc）时绕开数据面的跨域白名单限制。
+ * · 设为 `/api`（相对路径）→ 运行时按当前访问域名拼成绝对地址，走同域反向代理
+ *   （Cloudflare Pages Functions 转发到数据面），用于站点部署在自有域名（如 ores.cc）时
+ *   绕开数据面的跨域白名单限制。SDK 只接受 http(s) 绝对地址，故必须在此转换。
  */
+const FALLBACK_ENDPOINT = 'https://oe-brand.app.workbuddy.host'
+
+const RAW_API_BASE = import.meta.env.VITE_API_BASE as string | undefined
+
+function resolveEndpoint(): string {
+  if (!RAW_API_BASE) return FALLBACK_ENDPOINT
+  try {
+    const base = typeof location !== 'undefined' && location.origin ? location.origin : FALLBACK_ENDPOINT
+    return new URL(RAW_API_BASE, base).href.replace(/\/+$/, '')
+  } catch {
+    return FALLBACK_ENDPOINT
+  }
+}
+
 export const publicConfig = {
-  endpoint: (import.meta.env.VITE_API_BASE as string | undefined) || 'https://oe-brand.app.workbuddy.host',
+  endpoint: resolveEndpoint(),
   publishableKey: 'wbpk_LBkK4tO5FUutWDujrDXhyb_jYM6R3tvM50Zst8HehG43terKRDr3fET',
 }
 

@@ -38,6 +38,10 @@ export async function onRequest(context) {
 
   const headers = new Headers(request.headers)
   for (const h of STRIP_REQUEST_HEADERS) headers.delete(h)
+  // 数据面按来源域名做白名单校验，第三方域名会被拒（403）。
+  // 本代理代表本站访问上游，故把来源改写成受信任的托管域。
+  headers.set('Origin', UPSTREAM)
+  headers.set('Referer', UPSTREAM + '/')
 
   const init = { method: request.method, headers, redirect: 'manual' }
   if (request.method !== 'GET' && request.method !== 'HEAD') {
