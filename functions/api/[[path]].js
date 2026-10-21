@@ -450,6 +450,7 @@ async function rpcHandler(env, fn, a) {
       await requireApiKey(env, a.p_key)
       const data = a.p_data || {}
       const id = Number(data.id) || 0
+      if (!id && !String(data.name_en || '').trim()) throw new Error('NAME_EN_REQUIRED')
       if (id) {
         const rows = await updateRows(
           env, 'products', data,
