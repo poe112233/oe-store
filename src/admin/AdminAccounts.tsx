@@ -113,7 +113,7 @@ export default function AdminAccounts() {
     <>
       <p className="note" style={{ marginTop: 0 }}>
         {t(
-          'Administrator accounts sign in from the single sign-in form with a username and a password — no email or phone required.',
+          'Administrators sign in with an account name and a password.',
         )}
       </p>
 
@@ -188,10 +188,10 @@ export default function AdminAccounts() {
         <div className="fld" style={{ flex: 1, minWidth: 200, marginBottom: 0 }}>
           <label>{t('Password')}</label>
           <input
-            type="password"
+            type="text"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={t('Leave blank to keep the current password')}
             autoComplete="new-password"
           />
         </div>

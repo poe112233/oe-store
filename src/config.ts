@@ -38,14 +38,20 @@ export const publicConfig = {
 export const SITE_ORIGIN =
   (import.meta.env.VITE_SITE_ORIGIN as string | undefined) || 'https://oe-brand.app.workbuddy.host'
 
-/** 采购平台顺序与展示名 */
+/**
+ * 采购平台顺序与展示名。
+ *
+ * `logo`：官方站标（放在 `public/brand/`，同源自托管，不外链）。
+ * 没有 logo 的渠道自动回落到「首字母方块」，不会出现破图。
+ * `desc`：购买面板里的一行说明，key 走 t() 做多语言。
+ */
 export const PLATFORMS = [
-  { key: 'oopbuy', name: 'Oopbuy' },
-  { key: 'kakobuy', name: 'Kakobuy' },
-  { key: 'uidbuy', name: 'Uidbuy' },
-  { key: 'hipobuy', name: 'Hipobuy' },
-  { key: 'litbuy', name: 'Litbuy' },
-  { key: 'boonbuy', name: 'Boonbuy' },
+  { key: 'oopbuy', name: 'Oopbuy', logo: '/brand/oopbuy.png', desc: 'Invite code applied' },
+  { key: 'kakobuy', name: 'Kakobuy', logo: '/brand/kakobuy.png', desc: 'Full product page' },
+  { key: 'uidbuy', name: 'Uidbuy', logo: '/brand/uidbuy.png', desc: 'Direct item link' },
+  { key: 'hipobuy', name: 'Hipobuy', logo: '/brand/hipobuy.png', desc: 'Direct item link' },
+  { key: 'litbuy', name: 'Litbuy', logo: '/brand/litbuy.png', desc: 'Direct item link' },
+  { key: 'boonbuy', name: 'Boonbuy', logo: '/brand/boonbuy.png', desc: 'Direct item link' },
 ] as const
 
 /** 三大类 */

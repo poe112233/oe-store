@@ -53,36 +53,36 @@ export default function ChangePassword({ account }: { account: string }) {
   return (
     <>
       <p className="note" style={{ marginTop: 0 }}>
-        {t('Change the password of {email}. You stay signed in on this device.', { email: account || '—' })}
+        {t('Change the password of {account}. You stay signed in on this device.', { account: account || '—' })}
       </p>
       <div className="fld">
         <label>{t('Current password')}</label>
         <input
-          type="password"
+          type="text"
           value={oldPw}
           onChange={(e) => setOldPw(e.target.value)}
           autoComplete="current-password"
-          placeholder="••••••••"
+          placeholder={t('Current password')}
         />
       </div>
       <div className="fld">
         <label>{t('New password')}</label>
         <input
-          type="password"
+          type="text"
           value={newPw}
           onChange={(e) => setNewPw(e.target.value)}
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder={t('At least 6 characters')}
         />
       </div>
       <div className="fld">
         <label>{t('Confirm new password')}</label>
         <input
-          type="password"
+          type="text"
           value={confirmPw}
           onChange={(e) => setConfirmPw(e.target.value)}
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder={t('Repeat the new password')}
         />
       </div>
       <div className="row">
@@ -98,7 +98,7 @@ export default function ChangePassword({ account }: { account: string }) {
               'Forgot the current password? Ask another administrator to set a new one from the administrator account panel.',
             )
           : t(
-              'Forgot the current password? Sign out, then use “Forgot password” on the sign-in page to reset it by email code.',
+              'Forgot the current password? Ask another administrator to set a new one from the “Accounts” tab.',
             )}
       </p>
     </>

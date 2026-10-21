@@ -129,6 +129,20 @@ export default function ProductPage({
           <p className="note" style={{ marginTop: 22 }}>
             {t('Pick a platform below to buy — we inspect, pack and ship worldwide.')}
           </p>
+
+          {/* 微店原链接：想看卖家原始商品页/实拍图时用 */}
+          {(product.links || {}).weidian && (
+            <p className="note" style={{ marginTop: 10 }}>
+              <a
+                href={product.links.weidian}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ borderBottom: '1px solid var(--gold)', paddingBottom: 2 }}
+              >
+                {t('View the original listing on Weidian')} →
+              </a>
+            </p>
+          )}
         </div>
       </div>
 

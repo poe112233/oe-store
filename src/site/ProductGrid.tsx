@@ -161,8 +161,18 @@ export function BuySheet({
                   pick(p.key)
                 }}
               >
-                <span>{p.name}</span>
-                <em>{t('Buy')} →</em>
+                <span className="mark">
+                  {p.logo ? (
+                    <img src={p.logo} alt="" loading="lazy" />
+                  ) : (
+                    <i className="mono">{p.name.slice(0, 1)}</i>
+                  )}
+                </span>
+                <span className="nm">
+                  <b>{p.name}</b>
+                  <small>{t(p.desc)}</small>
+                </span>
+                <em className="go">{t('Buy')} →</em>
               </a>
             ))}
           </div>
@@ -171,6 +181,36 @@ export function BuySheet({
             {t('No purchase link yet for this item.')} {t(settings.footer_note)}
           </div>
         )}
+        {/* 微店原链接：与六个购买渠道并排但视觉上更轻，标明是卖家源页 */}
+        {(product.links || {}).weidian && (
+          <div style={{ marginTop: 14 }}>
+            <div className="plat-list">
+              <a
+                className="plat plat-origin"
+                href={product.links.weidian}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="mark">
+                  <img src="/brand/weidian.png" alt="" loading="lazy" />
+                </span>
+                <span className="nm">
+                  <b>
+                    {t('Original listing')} · Weidian
+                  </b>
+                  <small>{t("Seller's own page")}</small>
+                </span>
+                <em className="go">{t('Open on Weidian')} →</em>
+              </a>
+            </div>
+            <p className="note" style={{ marginTop: 8 }}>
+              {t(
+                'The original listing opens on the seller’s Weidian page — payment and delivery are handled there.',
+              )}
+            </p>
+          </div>
+        )}
+
         {note && <div className="err">{note}</div>}
         {settings.contact?.telegram && (
           <div className="note" style={{ marginTop: 18 }}>

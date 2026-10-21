@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import LangSwitch from '../components/LangSwitch'
 import { LogoLockupInverse } from '../components/Logo'
-import { cloud } from '../cloud'
 import { t, useLang } from '../i18n'
 import {
   fetchCategories,
   fetchPrivateConfig,
   fetchProducts,
   fetchSettings,
-  unwrap,
 } from '../lib/api'
 import { adminLogout, adminMe } from '../lib/localAuth'
 import { go } from '../lib/router'
@@ -24,18 +22,20 @@ import AdminAccounts from './AdminAccounts'
 import ApiTab from './ApiTab'
 import CategoriesTab from './CategoriesTab'
 import ChangePassword from './ChangePassword'
+import FeaturedTab from './FeaturedTab'
 import HostForm from './HostForm'
 import ImportTab from './ImportTab'
 import Login from './Login'
 import ProductsTab from './ProductsTab'
 import SettingsTab from './SettingsTab'
 
-type Tab = 'overview' | 'categories' | 'products' | 'import' | 'api' | 'settings' | 'account'
+type Tab = 'overview' | 'categories' | 'products' | 'featured' | 'import' | 'api' | 'settings' | 'account'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'categories', label: 'Categories' },
   { key: 'products', label: 'Products' },
+  { key: 'featured', label: 'Featured' },
   { key: 'import', label: 'Bulk import' },
   { key: 'api', label: 'API keys' },
   { key: 'settings', label: 'Site content' },
@@ -64,36 +64,12 @@ export default function AdminApp() {
   const boot = useCallback(async () => {
     setPhase('loading')
     try {
-      // 1) 自建的管理员账号会话（账号 + 密码，不绑邮箱/手机）
-      const local = await adminMe()
-      if (local) {
-        setAccount(local.display_name || local.username)
-        await reloadAll()
-        setPhase('ready')
-        return
-      }
-
-      // 2) 平台原生会话（邮箱登录）
-      const { data: session } = await cloud.auth.getSession()
-      if (!session) {
+      const me = await adminMe()
+      if (!me) {
         setPhase('login')
         return
       }
-      const isAdmin = unwrap(await cloud.database.rpc('is_admin'))
-      if (isAdmin !== true) {
-        setPhase('denied')
-        return
-      }
-      // session.user 由登录/续期响应构建（SDK 只映射 id/isAnonymous），不含 email；以 /user/me 为准
-      let mail =
-        session?.user?.email || String((session?.user?.raw as { email?: unknown } | undefined)?.email || '')
-      try {
-        const { data: me } = await cloud.auth.getUser()
-        mail = me?.email || me?.phone || me?.name || mail
-      } catch {
-        /* 取不到就退回 session，界面显示 — */
-      }
-      setAccount(mail)
+      setAccount(me.display_name || me.username)
       await reloadAll()
       setPhase('ready')
     } catch {
@@ -103,11 +79,6 @@ export default function AdminApp() {
 
   const signOut = useCallback(async () => {
     await adminLogout()
-    try {
-      await cloud.auth.signOut()
-    } catch {
-      /* 没有云会话时忽略 */
-    }
     boot()
   }, [boot])
 
@@ -195,7 +166,7 @@ export default function AdminApp() {
                   </div>
                 </div>
                 <p className="note" style={{ marginTop: 16 }}>
-                  {t('Signed in as {email} · multiple devices supported', { email: account || '—' })}
+                  {t('Signed in as {account} · multiple devices supported', { account: account || '—' })}
                 </p>
               </div>
 
@@ -241,6 +212,10 @@ export default function AdminApp() {
             <ImportTab categories={categories} reloadProducts={reloadProducts} reloadCategories={reloadCategories} />
           )}
 
+          {tab === 'featured' && (
+            <FeaturedTab settings={settings} products={products} categories={categories} onSaved={reloadAll} />
+          )}
+
           {tab === 'api' && <ApiTab />}
 
           {tab === 'settings' && <SettingsTab settings={settings} onSaved={reloadAll} />}
@@ -256,12 +231,12 @@ export default function AdminApp() {
                 <ChangePassword account={account} />
               </div>
               <div className="panel">
-                <h3>{t('Image host (GitHub + CDN)')}</h3>
-                <HostForm priv={priv} onSaved={reloadAll} />
+                <h3>{t('Image host')}</h3>
+                <HostForm />
               </div>
               <div className="panel">
                 <h3>{t('Account')}</h3>
-                <p className="note">{t('Signed in as {email}', { email: account || '—' })}</p>
+                <p className="note">{t('Signed in as {account}', { account: account || '—' })}</p>
                 <div className="row" style={{ marginTop: 14 }}>
                   <button className="btn sm ghost" onClick={signOut}>
                     {t('Sign out')}

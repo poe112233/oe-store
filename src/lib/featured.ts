@@ -15,13 +15,21 @@ import type { Category, Product } from '../types'
  *     降低抽到单图/冷门款拉低观感的概率；
  *   · 只挑有图、可见、且归属可见分类的商品。
  *
- * 想临时钉死某几件：把 id 填进 PIN_IDS（会优先占位，其余按算法补齐）。
+ * 后台可控（2026-10-18）：
+ *   · `featured_mode = 'manual'` → 完全按后台勾选的 `featured_ids` 顺序展示；
+ *   · `featured_mode = 'auto'`   → 上面的每日确定性随机；
+ *   · `featured_count` 决定数量（默认 12，上限 FEATURED_MAX）。
  */
-const PIN_IDS: number[] = []
+export const FEATURED_DEFAULT = 12
+export const FEATURED_MAX = 24
 
-const SLOTS = 8
-const MAX_PER_GROUP = 4
 const MIN_PER_GROUP = 1
+
+export interface FeaturedConfig {
+  mode?: 'auto' | 'manual'
+  count?: number
+  ids?: number[]
+}
 /** 精选优先多图款（详情页更好看）；候选不足时才退到单图 */
 const MIN_IMAGES = 2
 
@@ -77,9 +85,16 @@ function productWeight(p: Product) {
 export function pickFeatured(
   products: Product[],
   categories: Category[],
+  cfg: FeaturedConfig = {},
   seedDate = new Date(),
 ): Product[] {
   const visibleCats = categories.filter((c) => c.is_visible)
+  const count = Math.min(
+    FEATURED_MAX,
+    Math.max(1, Math.round(Number(cfg.count) || FEATURED_DEFAULT)),
+  )
+  /** 每组上限：数量越多允许单组越多，但始终保留跨组多样性 */
+  const maxPerGroup = Math.max(2, Math.ceil(count / 3))
 
   // 候选：可见 + 有图 + 归属可见分类
   const catById = new Map(visibleCats.map((c) => [c.id, c]))
@@ -91,8 +106,23 @@ export function pickFeatured(
       catById.has(p.category_id),
   )
   const rich = base.filter((p) => (p.images?.length || 0) >= MIN_IMAGES)
-  const usable = rich.length >= SLOTS * 2 ? rich : base
+  const usable = rich.length >= count * 2 ? rich : base
   if (!usable.length) return []
+
+  // 0) 手工精选：按后台勾选顺序原样输出（下架/无图/分类隐藏的自动跳过）
+  if (cfg.mode === 'manual') {
+    const seen = new Set<number>()
+    const pickedManual: Product[] = []
+    for (const id of cfg.ids || []) {
+      if (pickedManual.length >= count) break
+      const p = usable.find((x) => x.id === id)
+      if (!p || seen.has(p.id)) continue
+      seen.add(p.id)
+      pickedManual.push(p)
+    }
+    if (pickedManual.length) return pickedManual
+    // 勾选的都失效了 → 退回自动，避免首页空掉
+  }
 
   const byCat = new Map<number, Product[]>()
   for (const p of usable) {
@@ -107,20 +137,22 @@ export function pickFeatured(
   const usedCat = new Set<number>()
   const groupUsed: Record<string, number> = { shoes: 0, watches: 0, apparel: 0 }
 
-  // 1) 手动钉死
-  for (const id of PIN_IDS) {
-    if (picked.length >= SLOTS) break
+  // 0.5) 自动模式下的「置顶」：后台勾选的商品固定占位，其余仍按每日随机补齐。
+  //      季节款（如万圣节）临时推上去，不用把整份精选改成手工。
+  for (const id of cfg.ids || []) {
+    if (picked.length >= count) break
     const p = usable.find((x) => x.id === id)
-    if (!p || usedCat.has(p.category_id as number)) continue
+    if (!p || picked.some((x) => x.id === p.id)) continue
     picked.push(p)
-    usedCat.add(p.category_id as number)
-    const g = catById.get(p.category_id as number)?.group_key
+    const cid = p.category_id as number
+    usedCat.add(cid)
+    const g = catById.get(cid)?.group_key
     if (g && g in groupUsed) groupUsed[g]++
   }
 
-  // 2) 每组保底 1 个
+  // 1) 每组保底 1 个
   for (const g of GROUPS) {
-    if (picked.length >= SLOTS) break
+    if (picked.length >= count) break
     if (groupUsed[g.key] >= MIN_PER_GROUP) continue
     const pool = visibleCats.filter(
       (c) => c.group_key === g.key && !usedCat.has(c.id) && (byCat.get(c.id)?.length || 0) > 0,
@@ -137,13 +169,13 @@ export function pickFeatured(
     groupUsed[g.key]++
   }
 
-  // 3) 剩余槽位：全分类加权随机（受每组上限约束）
-  while (picked.length < SLOTS) {
+  // 2) 剩余槽位：全分类加权随机（受每组上限约束）
+  while (picked.length < count) {
     const pool = visibleCats.filter(
       (c) =>
         !usedCat.has(c.id) &&
         (byCat.get(c.id)?.length || 0) > 0 &&
-        (groupUsed[c.group_key] ?? 0) < MAX_PER_GROUP,
+        (groupUsed[c.group_key] ?? 0) < maxPerGroup,
     )
     if (!pool.length) break
     const k = weightedSample(

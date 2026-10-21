@@ -42,6 +42,10 @@ const zh: Record<string, string> = {
   'Search results · {n}': '搜索结果 · {n}',
   'Nothing matched.': '没有匹配的结果。',
   'Choose where to buy': '选择购买渠道',
+  'Original listing': '微店原链接',
+  'Open on Weidian': '在微店打开',
+  'View the original listing on Weidian': '查看微店原链接',
+  'The original listing opens on the seller’s Weidian page — payment and delivery are handled there.': '原链接会打开卖家的微店商品页，付款与发货均在微店完成。',
   'View details': '查看详情',
   '{n} photos': '{n} 张图',
   'Photo {n}': '第 {n} 张',
@@ -330,6 +334,8 @@ const zh: Record<string, string> = {
   'Copy failed — select the text manually': '复制失败，请手动选中文本复制',
   'How to call the API': '接口调用说明',
   'Every call is a POST to this address, with two headers and one JSON body.': '每次调用都是向下面这个地址发 POST，带两个请求头和一个 JSON 请求体。',
+  'Every call is a POST to this endpoint with a JSON body shaped as {"fn":"<name>","args":{…}}, and your key goes inside args as p_key.':
+    '每次调用都是向下面这个地址发 POST，请求体形如 {"fn":"<函数名>","args":{…}}，密钥放在 args 里的 p_key。',
   'Endpoint': '接口地址',
   'Action': '操作',
   'Function': '数据库函数',
@@ -367,6 +373,78 @@ const zh: Record<string, string> = {
     '用该管理员账号绑定的邮箱登录。',
   'To change your own password, use the “Change password” panel instead — it keeps you signed in.':
     '要改自己的密码，请用下方的「修改密码」面板——它不会把你踢下线。',
+
+  // 后台 · 精选
+  'Featured picks': '精选推荐',
+  'Controls the “Signature picks” block on the homepage, and the featured list that all landing pages read.':
+    '控制首页「精选推荐」板块，以及所有落地页读取的精选列表。',
+  'Selection mode': '精选方式',
+  'Automatic (daily rotation)': '自动（每日轮换）',
+  'Manual selection': '手动挑选',
+  'A different, spread-across-categories set is drawn every day — no maintenance needed.':
+    '每天自动换一批，跨分类分散，无需人工维护。',
+  'Shown exactly in the order you pick below. Items that go offline are skipped automatically.':
+    '完全按下方挑选的顺序展示；已下架的商品会自动跳过。',
+  'How many picks': '精选数量',
+  'Between 1 and {max}. Landing pages always take the first 8.': '可设 1 到 {max} 件；落地页固定取前 8 件。',
+  'Selected order': '已选顺序',
+  'Nothing selected yet — pick products from the list below.': '还没有选中商品——从下方列表里挑吧。',
+  'Add products': '添加商品',
+  'Search by name…': '按名称搜索…',
+  'All categories': '全部分类',
+  Remove: '移除',
+  Add: '添加',
+  'No products match this filter.': '没有符合筛选条件的商品。',
+  'Effective immediately for the homepage and all landing pages (within 5 minutes of cache).':
+    '首页立即生效；落地页缓存 5 分钟内同步。',
+
+  // 购买面板 · 渠道说明
+  'Invite code applied': '已带邀请码',
+  'Full product page': '打开完整商品页',
+  'Direct item link': '直达商品链接',
+  "Seller's own page": '卖家原始页面',
+  'Please enter the account name, not an email': '请输入账号名，不是邮箱',
+  // 后台 · 图床说明 / 置顶精选
+  'Image host': '图床',
+  'Public URL': '公开地址',
+  Storage: '存储位置',
+  Format: '格式',
+  Delivery: '分发',
+  'How new images arrive': '新图如何进来',
+  'Images live inside this site: they are stored in oe-site/public/oe/ and published together with the pages on Cloudflare Pages. Visitors load them from https://ores.cc/oe/ — same origin, no third-party CDN.':
+    '图片就存在站点仓库里：放在 oe-site/public/oe/，随页面一起发布到 Cloudflare Pages，访客从 https://ores.cc/oe/ 同域直接加载，不经过任何第三方 CDN。',
+  'WebP, 600px on the longest edge, converted from the Weidian source image':
+    'WebP，最长边 600px，由微店原图转换而来',
+  'Cloudflare Pages global edge, same origin as the site': 'Cloudflare Pages 全球边缘节点，与站点同域',
+  'The local import pipeline downloads and converts them, then the site is redeployed':
+    '由本地导入脚本下载并转换，随后重新部署站点',
+  'The old GitHub + jsDelivr route is retired: jsDelivr fails for a large share of requests from mainland China, so images are never served from it.':
+    '旧的 GitHub + jsDelivr 方案已停用：jsDelivr 在中国大陆有大量请求失败，图片不再走它。',
+  'Product images are edited on the Products tab — paste the full image URLs, one per line.':
+    '商品图在「商品」Tab 里改：把完整图片地址粘进去，一行一张。',
+  'Current password': '当前密码',
+  'At least 6 characters': '至少 6 位',
+  'Repeat the new password': '再输一次新密码',
+  'Pinned picks': '置顶精选',
+  'Pinned items always appear in the featured block; the remaining slots still rotate every day. Leave empty for pure rotation.':
+    '置顶商品固定出现在精选区，其余位置仍每日轮换。留空则完全按算法轮换。',
+
+  'Sign in with your administrator account and password.': '用管理员账号和密码登录。',
+  Account: '账号',
+  'Your administrator account': '你的管理员账号',
+  'Your password': '你的密码',
+  'Show password': '显示密码',
+  'Hide password': '隐藏密码',
+  'Signed in as {account} · multiple devices supported': '登录账号：{account} · 支持多设备同时登录',
+  'Signed in as {account}': '当前登录账号：{account}',
+  'Change the password of {account}. You stay signed in on this device.': '修改 {account} 的密码。改完本设备不会掉线。',
+  'Forgot the current password? Ask another administrator to set a new one from the “Accounts” tab.':
+    '忘了当前密码？让另一位管理员在「管理员账号」里重设即可。',
+  'Administrators sign in with an account name and a password.': '管理员用账号 + 密码登录。',
+  'If your browser autofilled an old password, clear it and type again — tap the eye icon to check.':
+    '如果浏览器自动填充了旧密码，请清空后重新输入——点右侧眼睛图标可以看到实际内容。',
+  'Sign-in failed': '登录失败',
+
 }
 
 /* ------------------------------------------------------------------ */
@@ -399,6 +477,10 @@ const es: Record<string, string> = {
   'Search results · {n}': 'Resultados · {n}',
   'Nothing matched.': 'Sin resultados.',
   'Choose where to buy': 'Elige dónde comprar',
+  'Original listing': 'Enlace original',
+  'Open on Weidian': 'Abrir en Weidian',
+  'View the original listing on Weidian': 'Ver el enlace original en Weidian',
+  'The original listing opens on the seller’s Weidian page — payment and delivery are handled there.': 'El enlace original abre la página del vendedor en Weidian; el pago y el envío se gestionan allí.',
   'View details': 'Ver detalles',
   '{n} photos': '{n} fotos',
   'Photo {n}': 'Foto {n}',
@@ -675,6 +757,8 @@ const es: Record<string, string> = {
   'Copy failed — select the text manually': 'No se pudo copiar: selecciona el texto manualmente',
   'How to call the API': 'Cómo llamar a la API',
   'Every call is a POST to this address, with two headers and one JSON body.': 'Cada llamada es un POST a esta dirección, con dos cabeceras y un cuerpo JSON.',
+  'Every call is a POST to this endpoint with a JSON body shaped as {"fn":"<name>","args":{…}}, and your key goes inside args as p_key.':
+    'Cada llamada es un POST a este endpoint con un cuerpo JSON con forma {"fn":"<nombre>","args":{…}}; la clave va dentro de args como p_key.',
   'Endpoint': 'Dirección del endpoint',
   'Action': 'Acción',
   'Function': 'Función',
@@ -712,6 +796,82 @@ const es: Record<string, string> = {
     'Inicia sesión con el correo electrónico de la cuenta de administrador.',
   'To change your own password, use the “Change password” panel instead — it keeps you signed in.':
     'Para cambiar tu propia contraseña usa el panel «Cambiar contraseña»: así no se cierra tu sesión.',
+
+  // Admin · destacados
+  'Featured picks': 'Selección destacada',
+  'Controls the “Signature picks” block on the homepage, and the featured list that all landing pages read.':
+    'Controla el bloque «Selección destacada» de la portada y la lista que leen todas las páginas de destino.',
+  'Selection mode': 'Modo de selección',
+  'Automatic (daily rotation)': 'Automático (rotación diaria)',
+  'Manual selection': 'Selección manual',
+  'A different, spread-across-categories set is drawn every day — no maintenance needed.':
+    'Cada día se elige un conjunto distinto, repartido entre categorías: sin mantenimiento.',
+  'Shown exactly in the order you pick below. Items that go offline are skipped automatically.':
+    'Se muestra exactamente en el orden que elijas abajo. Los artículos retirados se omiten automáticamente.',
+  'How many picks': 'Cuántas piezas',
+  'Between 1 and {max}. Landing pages always take the first 8.':
+    'Entre 1 y {max}. Las páginas de destino siempre toman las primeras 8.',
+  'Selected order': 'Orden seleccionado',
+  'Nothing selected yet — pick products from the list below.':
+    'Aún no hay nada seleccionado: elige productos de la lista de abajo.',
+  'Add products': 'Añadir productos',
+  'Search by name…': 'Buscar por nombre…',
+  'All categories': 'Todas las categorías',
+  Remove: 'Quitar',
+  Add: 'Añadir',
+  'No products match this filter.': 'Ningún producto coincide con este filtro.',
+  'Effective immediately for the homepage and all landing pages (within 5 minutes of cache).':
+    'Se aplica al instante en la portada; en las páginas de destino, en 5 minutos (caché).',
+
+  // Panel de compra · descripción de canales
+  'Invite code applied': 'Código de invitación aplicado',
+  'Full product page': 'Página completa del producto',
+  'Direct item link': 'Enlace directo al artículo',
+  "Seller's own page": 'Página original del vendedor',
+  'Please enter the account name, not an email': 'Introduce el nombre de la cuenta, no un correo',
+  'Image host': 'Alojamiento de imágenes',
+  'Public URL': 'URL pública',
+  Storage: 'Almacenamiento',
+  Format: 'Formato',
+  Delivery: 'Entrega',
+  'How new images arrive': 'Cómo llegan las imágenes nuevas',
+  'Images live inside this site: they are stored in oe-site/public/oe/ and published together with the pages on Cloudflare Pages. Visitors load them from https://ores.cc/oe/ — same origin, no third-party CDN.':
+    'Las imágenes viven dentro del propio sitio: se guardan en oe-site/public/oe/ y se publican con las páginas en Cloudflare Pages. Se cargan desde https://ores.cc/oe/, mismo origen y sin CDN externo.',
+  'WebP, 600px on the longest edge, converted from the Weidian source image':
+    'WebP, 600 px en el lado mayor, convertidas desde la imagen original de Weidian',
+  'Cloudflare Pages global edge, same origin as the site':
+    'Red global de Cloudflare Pages, mismo origen que el sitio',
+  'The local import pipeline downloads and converts them, then the site is redeployed':
+    'El proceso local de importación las descarga y convierte; después se vuelve a publicar el sitio',
+  'The old GitHub + jsDelivr route is retired: jsDelivr fails for a large share of requests from mainland China, so images are never served from it.':
+    'La ruta antigua GitHub + jsDelivr está retirada: jsDelivr falla en buena parte de las peticiones desde China continental, así que las imágenes ya no se sirven desde ahí.',
+  'Product images are edited on the Products tab — paste the full image URLs, one per line.':
+    'Las imágenes de producto se editan en la pestaña Productos: pega las URL completas, una por línea.',
+  'Current password': 'Contraseña actual',
+  'At least 6 characters': 'Al menos 6 caracteres',
+  'Repeat the new password': 'Repite la nueva contraseña',
+  'Pinned picks': 'Destacados fijados',
+  'Pinned items always appear in the featured block; the remaining slots still rotate every day. Leave empty for pure rotation.':
+    'Los artículos fijados siempre aparecen en el bloque destacado; el resto rota cada día. Déjalo vacío para rotación pura.',
+
+  'Sign in with your administrator account and password.': 'Inicia sesión con tu cuenta de administrador y contraseña.',
+  Account: 'Cuenta',
+  'Your administrator account': 'Tu cuenta de administrador',
+  'Your password': 'Tu contraseña',
+  'Show password': 'Mostrar contraseña',
+  'Hide password': 'Ocultar contraseña',
+  'Signed in as {account} · multiple devices supported': 'Sesión iniciada como {account} · varios dispositivos admitidos',
+  'Signed in as {account}': 'Sesión iniciada como {account}',
+  'Change the password of {account}. You stay signed in on this device.':
+    'Cambia la contraseña de {account}. No se cerrará tu sesión en este dispositivo.',
+  'Forgot the current password? Ask another administrator to set a new one from the “Accounts” tab.':
+    '¿Olvidaste la contraseña actual? Pide a otro administrador que la restablezca desde la pestaña «Cuentas».',
+  'Administrators sign in with an account name and a password.':
+    'Los administradores inician sesión con un nombre de cuenta y una contraseña.',
+  'If your browser autofilled an old password, clear it and type again — tap the eye icon to check.':
+    'Si el navegador rellenó una contraseña antigua, bórrala y escríbela de nuevo: pulsa el icono del ojo para verla.',
+  'Sign-in failed': 'Error al iniciar sesión',
+
 }
 
 /* ------------------------------------------------------------------ */
@@ -744,6 +904,10 @@ const pt: Record<string, string> = {
   'Search results · {n}': 'Resultados · {n}',
   'Nothing matched.': 'Nenhum resultado.',
   'Choose where to buy': 'Escolha onde comprar',
+  'Original listing': 'Link original',
+  'Open on Weidian': 'Abrir no Weidian',
+  'View the original listing on Weidian': 'Ver o link original no Weidian',
+  'The original listing opens on the seller’s Weidian page — payment and delivery are handled there.': 'O link original abre a página do vendedor no Weidian; pagamento e envio são tratados lá.',
   'View details': 'Ver detalhes',
   '{n} photos': '{n} fotos',
   'Photo {n}': 'Foto {n}',
@@ -1020,6 +1184,8 @@ const pt: Record<string, string> = {
   'Copy failed — select the text manually': 'Falha ao copiar — selecione o texto manualmente',
   'How to call the API': 'Como chamar a API',
   'Every call is a POST to this address, with two headers and one JSON body.': 'Cada chamada é um POST para este endereço, com dois cabeçalhos e um corpo JSON.',
+  'Every call is a POST to this endpoint with a JSON body shaped as {"fn":"<name>","args":{…}}, and your key goes inside args as p_key.':
+    'Cada chamada é um POST para este endpoint com corpo JSON no formato {"fn":"<nome>","args":{…}}; a chave vai dentro de args como p_key.',
   'Endpoint': 'Endereço do endpoint',
   'Action': 'Ação',
   'Function': 'Função',
@@ -1057,6 +1223,82 @@ const pt: Record<string, string> = {
     'Entre com o e-mail da conta de administrador.',
   'To change your own password, use the “Change password” panel instead — it keeps you signed in.':
     'Para alterar sua própria senha, use o painel «Alterar senha» — assim você não sai da conta.',
+
+  // Admin · destaques
+  'Featured picks': 'Seleção em destaque',
+  'Controls the “Signature picks” block on the homepage, and the featured list that all landing pages read.':
+    'Controla o bloco «Seleção em destaque» da página inicial e a lista que todas as landing pages leem.',
+  'Selection mode': 'Modo de seleção',
+  'Automatic (daily rotation)': 'Automático (rotação diária)',
+  'Manual selection': 'Seleção manual',
+  'A different, spread-across-categories set is drawn every day — no maintenance needed.':
+    'Todo dia é sorteado um conjunto diferente, distribuído entre categorias — sem manutenção.',
+  'Shown exactly in the order you pick below. Items that go offline are skipped automatically.':
+    'Exibido exatamente na ordem escolhida abaixo. Itens fora do ar são ignorados automaticamente.',
+  'How many picks': 'Quantos destaques',
+  'Between 1 and {max}. Landing pages always take the first 8.':
+    'Entre 1 e {max}. As landing pages sempre usam os 8 primeiros.',
+  'Selected order': 'Ordem selecionada',
+  'Nothing selected yet — pick products from the list below.':
+    'Nada selecionado ainda — escolha produtos na lista abaixo.',
+  'Add products': 'Adicionar produtos',
+  'Search by name…': 'Buscar por nome…',
+  'All categories': 'Todas as categorias',
+  Remove: 'Remover',
+  Add: 'Adicionar',
+  'No products match this filter.': 'Nenhum produto corresponde a este filtro.',
+  'Effective immediately for the homepage and all landing pages (within 5 minutes of cache).':
+    'Vale na hora na página inicial; nas landing pages em até 5 minutos (cache).',
+
+  // Painel de compra · descrição dos canais
+  'Invite code applied': 'Código de convite aplicado',
+  'Full product page': 'Página completa do produto',
+  'Direct item link': 'Link direto do item',
+  "Seller's own page": 'Página original do vendedor',
+  'Please enter the account name, not an email': 'Digite o nome da conta, não um e-mail',
+  'Image host': 'Hospedagem de imagens',
+  'Public URL': 'URL pública',
+  Storage: 'Armazenamento',
+  Format: 'Formato',
+  Delivery: 'Entrega',
+  'How new images arrive': 'Como as novas imagens entram',
+  'Images live inside this site: they are stored in oe-site/public/oe/ and published together with the pages on Cloudflare Pages. Visitors load them from https://ores.cc/oe/ — same origin, no third-party CDN.':
+    'As imagens ficam dentro do próprio site: são gravadas em oe-site/public/oe/ e publicadas junto com as páginas no Cloudflare Pages. São carregadas de https://ores.cc/oe/, mesma origem e sem CDN externo.',
+  'WebP, 600px on the longest edge, converted from the Weidian source image':
+    'WebP, 600 px no lado maior, convertidas a partir da imagem original do Weidian',
+  'Cloudflare Pages global edge, same origin as the site':
+    'Rede global do Cloudflare Pages, mesma origem do site',
+  'The local import pipeline downloads and converts them, then the site is redeployed':
+    'O processo local de importação baixa e converte; depois o site é publicado novamente',
+  'The old GitHub + jsDelivr route is retired: jsDelivr fails for a large share of requests from mainland China, so images are never served from it.':
+    'A rota antiga GitHub + jsDelivr foi desativada: o jsDelivr falha em boa parte das requisições da China continental, então as imagens não passam mais por ele.',
+  'Product images are edited on the Products tab — paste the full image URLs, one per line.':
+    'As imagens do produto são editadas na aba Produtos: cole as URLs completas, uma por linha.',
+  'Current password': 'Senha atual',
+  'At least 6 characters': 'Pelo menos 6 caracteres',
+  'Repeat the new password': 'Repita a nova senha',
+  'Pinned picks': 'Destaques fixados',
+  'Pinned items always appear in the featured block; the remaining slots still rotate every day. Leave empty for pure rotation.':
+    'Os itens fixados aparecem sempre no bloco de destaques; as demais posições continuam rotacionando todo dia. Deixe vazio para rotação pura.',
+
+  'Sign in with your administrator account and password.': 'Entre com sua conta de administrador e senha.',
+  Account: 'Conta',
+  'Your administrator account': 'Sua conta de administrador',
+  'Your password': 'Sua senha',
+  'Show password': 'Mostrar senha',
+  'Hide password': 'Ocultar senha',
+  'Signed in as {account} · multiple devices supported': 'Conectado como {account} · vários dispositivos permitidos',
+  'Signed in as {account}': 'Conectado como {account}',
+  'Change the password of {account}. You stay signed in on this device.':
+    'Altere a senha de {account}. Você continua conectado neste dispositivo.',
+  'Forgot the current password? Ask another administrator to set a new one from the “Accounts” tab.':
+    'Esqueceu a senha atual? Peça a outro administrador para redefini-la na aba «Contas».',
+  'Administrators sign in with an account name and a password.':
+    'Administradores entram com nome de conta e senha.',
+  'If your browser autofilled an old password, clear it and type again — tap the eye icon to check.':
+    'Se o navegador preencheu uma senha antiga, apague e digite de novo — toque no ícone do olho para conferir.',
+  'Sign-in failed': 'Falha no login',
+
 }
 
 const dict: Record<Exclude<Lang, 'en'>, Record<string, string>> = { zh, es, pt }

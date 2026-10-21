@@ -45,6 +45,12 @@ export interface SiteSettings {
   hero_image: string
   footer_note: string
   contact: Contact
+  /** 精选推荐：auto = 每天确定性随机；manual = 后台手工指定（按选择顺序） */
+  featured_mode: 'auto' | 'manual'
+  /** 精选数量（1–24，默认 12） */
+  featured_count: number
+  /** 手工精选的商品 id，按展示顺序 */
+  featured_ids: number[]
 }
 
 export interface PrivateConfig {
@@ -77,6 +83,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     youtube: '',
     wechat: '',
   },
+  featured_mode: 'auto',
+  featured_count: 12,
+  featured_ids: [],
 }
 
 export const DEFAULT_PRIVATE: PrivateConfig = {

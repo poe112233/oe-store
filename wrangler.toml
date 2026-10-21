@@ -1,0 +1,12 @@
+# Cloudflare Pages 配置
+# 用途：声明 D1 绑定，让 `wrangler pages deploy` 带上数据库。
+# database_id 在 `wrangler d1 create oe-store` 之后填进来。
+
+name = "oe-store"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "oe-store"
+database_id = "ab53e0a6-1fb7-4f67-a92b-fc45236fb5ad"

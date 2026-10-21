@@ -1,9 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PLATFORMS } from '../config'
 import { t, useLang } from '../i18n'
 import { createProduct, deleteProduct, updateProduct } from '../lib/api'
 import { buyLinksFrom } from '../lib/buyLinks'
-import { uploadImage } from '../lib/github'
 import type { Category, PrivateConfig, Product } from '../types'
 
 const PAGE = 40
@@ -51,11 +50,9 @@ export default function ProductsTab({
   const [page, setPage] = useState(0)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [busy, setBusy] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [err, setErr] = useState('')
   const [ok, setOk] = useState('')
   const [wdInput, setWdInput] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
 
   function flash(m: string, isErr = false) {
     if (isErr) setErr(m)
@@ -102,27 +99,6 @@ export default function ProductsTab({
     if (!links) return flash(t('Could not read an itemID from that link.'), true)
     setDraft({ ...draft, links: { ...draft.links, ...links } })
     flash(t('Filled {n} purchase links', { n: Object.keys(links).length }))
-  }
-
-  async function doUpload(files: FileList | null) {
-    if (!files || !files.length || !draft) return
-    if (!priv.github_token) return flash(t('Image host token not configured. Go to Account → Image host.'), true)
-    setUploading(true)
-    try {
-      const urls: string[] = []
-      for (const f of Array.from(files)) {
-        const r = await uploadImage(f, priv)
-        urls.push(r.url)
-      }
-      const merged = [draft.images.trim(), ...urls].filter(Boolean).join('\n')
-      setDraft({ ...draft, images: merged })
-      flash(t('Uploaded {n} images', { n: urls.length }))
-    } catch (e: any) {
-      flash(String(e?.message || e), true)
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
   }
 
   async function save() {
@@ -245,43 +221,10 @@ export default function ProductsTab({
             <textarea
               value={draft.images}
               onChange={(e) => setDraft({ ...draft, images: e.target.value })}
-              placeholder={'https://cdn.jsdelivr.net/gh/.../a.jpg\nhttps://cdn.jsdelivr.net/gh/.../b.jpg'}
+              placeholder={'https://ores.cc/oe/7844364513-935c4c11.webp\nhttps://ores.cc/oe/7844364513-a885003b.webp'}
               style={{ minHeight: 110, fontFamily: 'monospace', fontSize: 12 }}
             />
           </div>
-          <div className="row" style={{ marginBottom: 14 }}>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={(e) => doUpload(e.target.files)}
-            />
-            <button className="mini" disabled={uploading} onClick={() => fileRef.current?.click()}>
-              {uploading ? t('Uploading…') : t('Upload images to image host')}
-            </button>
-            {thumbs.length > 0 && <span className="note">{t('{n} images', { n: thumbs.length })}</span>}
-          </div>
-          {thumbs.length > 0 && (
-            <div className="thumbs" style={{ marginBottom: 18 }}>
-              {thumbs.map((th, i) => (
-                <div key={th + i} style={{ position: 'relative' }}>
-                  <img src={th} alt="" />
-                  <button
-                    className="mini danger"
-                    style={{ position: 'absolute', top: 2, right: 2, padding: '1px 6px' }}
-                    onClick={() => {
-                      const next = thumbs.filter((_, k) => k !== i)
-                      setDraft({ ...draft, images: next.join('\n') })
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
 
           <label style={{ fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             {t('Purchase links')}

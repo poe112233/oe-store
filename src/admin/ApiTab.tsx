@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { publicConfig } from '../config'
 import { t, useLang } from '../i18n'
 import { createApiToken, listApiTokens, revokeApiToken, rpcCode, type ApiTokenRow } from '../lib/localAuth'
 
@@ -27,6 +26,13 @@ function errText(e: unknown): string {
   }
 }
 
+/** 密钥列表里只露头尾，避免整串被人截图；「复制」按钮仍然复制完整密钥。 */
+function maskKey(key: string): string {
+  if (!key) return '—'
+  if (key.length <= 12) return key
+  return `${key.slice(0, 10)}....${key.slice(-4)}`
+}
+
 export default function ApiTab() {
   useLang()
   const [rows, setRows] = useState<ApiTokenRow[]>([])
@@ -37,8 +43,7 @@ export default function ApiTab() {
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
 
-  const base = `${publicConfig.endpoint}/.cloud/database/rest/rpc`
-  const appKey = publicConfig.publishableKey
+  const base = `${typeof location !== 'undefined' ? location.origin : 'https://ores.cc'}/api/rpc`
 
   const reload = useCallback(async () => {
     try {
@@ -106,22 +111,20 @@ export default function ApiTab() {
   const curlSample = useMemo(() => {
     const key = fresh?.token || '<你的密钥>'
     return [
-      `curl -s -X POST "${base}/oe_api_products" \\`,
+      `curl -s -X POST "${base}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -H "x-wb-webapp-access-key: ${appKey}" \\`,
-      `  -d '{"p_key":"${key}","p_limit":5}'`,
+      `  -d '{"fn":"oe_api_products","args":{"p_key":"${key}","p_limit":5}}'`,
     ].join('\n')
-  }, [base, appKey, fresh])
+  }, [base, fresh])
 
   const saveSample = useMemo(() => {
     const key = fresh?.token || '<你的密钥>'
     return [
-      `curl -s -X POST "${base}/oe_api_product_save" \\`,
+      `curl -s -X POST "${base}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -H "x-wb-webapp-access-key: ${appKey}" \\`,
-      `  -d '{"p_key":"${key}","p_data":{"item_id":"7844423713","name_en":"New name","sold_count":300}}'`,
+      `  -d '{"fn":"oe_api_product_save","args":{"p_key":"${key}","p_data":{"id":5,"name_en":"New name"}}}'`,
     ].join('\n')
-  }, [base, appKey, fresh])
+  }, [base, fresh])
 
   const endpoints: [string, string][] = [
     [t('List products'), `oe_api_products(p_key, p_limit, p_offset)`],
@@ -189,7 +192,7 @@ export default function ApiTab() {
                 <tr key={r.id}>
                   <td>{r.label}</td>
                   <td style={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all' }}>
-                    {r.token_plain || `${r.token_hint}…`}
+                    {maskKey(r.token_plain || r.token_hint || '')}
                     <button
                       className="mini"
                       style={{ marginLeft: 8 }}
@@ -251,13 +254,13 @@ export default function ApiTab() {
       <div className="panel">
         <h3>{t('How to call the API')}</h3>
         <p className="note" style={{ marginTop: 0 }}>
-          {t('Every call is a POST to this address, with two headers and one JSON body.')}
+          {t('Every call is a POST to this endpoint with a JSON body shaped as {"fn":"<name>","args":{…}}, and your key goes inside args as p_key.')}
         </p>
 
         <div className="fld">
           <label>{t('Endpoint')}</label>
           <code style={{ fontFamily: 'monospace', fontSize: 12.5, wordBreak: 'break-all' }}>
-            {base}/&lt;function&gt;
+            {base}
           </code>
         </div>
 

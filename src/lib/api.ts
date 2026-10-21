@@ -1,4 +1,4 @@
-import { cloud } from '../cloud'
+import { db, rpc } from './clouddb'
 import { getAdminToken } from './localAuth'
 import {
   DEFAULT_PRIVATE,
@@ -16,28 +16,84 @@ export function unwrap<T>(res: { data: T; error: any }): T {
 
 /* ---------------- public reads ---------------- */
 
+/**
+ * 只读兜底快照。
+ *
+ * 数据库被隔离 / 超额 / 欠费时，数据面会返回 DATABASE_RESOURCE_ISOLATED 之类的错误，
+ * 整站会直接白屏成「Could not load the catalogue」。此时改用构建期导出的
+ * `/data-snapshot.json` 渲染（内容可能滞后，但站点可用、链接全在），
+ * 数据库恢复后无需改代码即自动切回实时数据。
+ */
+type Snapshot = {
+  categories?: Category[]
+  products?: Product[]
+  settings?: Partial<SiteSettings>
+  generatedAt?: string
+}
+
+let snapPromise: Promise<Snapshot | null> | null = null
+
+function loadSnapshot(): Promise<Snapshot | null> {
+  if (!snapPromise) {
+    snapPromise = fetch('/data-snapshot.json', { cache: 'no-cache' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => (j && Array.isArray(j.products) ? (j as Snapshot) : null))
+      .catch(() => null)
+  }
+  return snapPromise
+}
+
+function warnFallback(what: string, e: unknown) {
+  if (typeof console !== 'undefined') {
+    console.warn(`[oe] ${what} 实时数据不可用，改用本地快照`, e)
+  }
+}
+
 export async function fetchCategories(): Promise<Category[]> {
-  const res = await cloud.database
-    .from('categories')
-    .select('id, group_key, name_en, name_zh, slug, sort_order, is_visible')
-    .order('sort_order', { ascending: true })
-    .order('id', { ascending: true })
-  return unwrap(res) ?? []
+  try {
+    const res = await db
+      .from('categories')
+      .select('id, group_key, name_en, name_zh, slug, sort_order, is_visible')
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
+    const rows = unwrap(res) ?? []
+    if (rows.length) return rows
+  } catch (e) {
+    warnFallback('categories', e)
+  }
+  const snap = await loadSnapshot()
+  return snap?.categories ?? []
 }
 
 export async function fetchProducts(): Promise<Product[]> {
-  const res = await cloud.database
-    .from('products')
-    .select('id, category_id, name_en, name_zh, images, links, sort_order, is_visible, clicks, sold_count')
-    .order('sort_order', { ascending: true })
-    .order('id', { ascending: true })
-  return unwrap(res) ?? []
+  try {
+    const res = await db
+      .from('products')
+      .select('id, category_id, name_en, name_zh, images, links, sort_order, is_visible, clicks, sold_count')
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
+    const rows = unwrap(res) ?? []
+    if (rows.length) return rows
+  } catch (e) {
+    warnFallback('products', e)
+  }
+  const snap = await loadSnapshot()
+  return snap?.products ?? []
 }
 
 export async function fetchSettings(): Promise<SiteSettings> {
-  const res = await cloud.database.from('site_settings').select('data').limit(1)
-  const rows = unwrap(res) ?? []
-  const data = rows[0]?.data ?? {}
+  try {
+    const res = await db.from('site_settings').select('data').limit(1)
+    const rows = unwrap(res) ?? []
+    const data = rows[0]?.data ?? {}
+    if (Object.keys(data).length) {
+      return { ...DEFAULT_SETTINGS, ...data, contact: { ...DEFAULT_SETTINGS.contact, ...(data.contact ?? {}) } }
+    }
+  } catch (e) {
+    warnFallback('settings', e)
+  }
+  const snap = await loadSnapshot()
+  const data = snap?.settings ?? {}
   return { ...DEFAULT_SETTINGS, ...data, contact: { ...DEFAULT_SETTINGS.contact, ...(data.contact ?? {}) } }
 }
 
@@ -63,18 +119,18 @@ function token(): string | null {
 async function adminRead(table: string, limit = 1000): Promise<Row[]> {
   const t = token()
   if (!t) {
-    return (unwrap(await cloud.database.from(table).select('*').limit(limit)) ?? []) as Row[]
+    return (unwrap(await db.from(table).select('*').limit(limit)) ?? []) as Row[]
   }
-  const res = await cloud.database.rpc('oe_admin_read', { p_token: t, p_table: table, p_limit: limit })
+  const res = await rpc('oe_admin_read', { p_token: t, p_table: table, p_limit: limit })
   return (unwrap(res) ?? []) as Row[]
 }
 
 async function adminInsert(table: string, payload: Row | Row[]): Promise<Row[]> {
   const t = token()
   if (!t) {
-    return (unwrap(await (cloud.database.from(table) as any).insert(payload).select()) ?? []) as Row[]
+    return (unwrap(await (db.from(table) as any).insert(payload).select()) ?? []) as Row[]
   }
-  const res = await cloud.database.rpc('oe_admin_write', {
+  const res = await rpc('oe_admin_write', {
     p_token: t,
     p_table: table,
     p_action: 'insert',
@@ -87,11 +143,11 @@ async function adminInsert(table: string, payload: Row | Row[]): Promise<Row[]> 
 async function adminUpdate(table: string, patch: Row, match: Row): Promise<Row[]> {
   const t = token()
   if (!t) {
-    let q: any = (cloud.database.from(table) as any).update(patch)
+    let q: any = (db.from(table) as any).update(patch)
     for (const [k, v] of Object.entries(match)) q = q.eq(k, v)
     return (unwrap(await q.select()) ?? []) as Row[]
   }
-  const res = await cloud.database.rpc('oe_admin_write', {
+  const res = await rpc('oe_admin_write', {
     p_token: t,
     p_table: table,
     p_action: 'update',
@@ -104,11 +160,11 @@ async function adminUpdate(table: string, patch: Row, match: Row): Promise<Row[]
 async function adminDelete(table: string, match: Row): Promise<Row[]> {
   const t = token()
   if (!t) {
-    let q: any = cloud.database.from(table).delete()
+    let q: any = db.from(table).delete()
     for (const [k, v] of Object.entries(match)) q = q.eq(k, v)
     return (unwrap(await q.select()) ?? []) as Row[]
   }
-  const res = await cloud.database.rpc('oe_admin_write', {
+  const res = await rpc('oe_admin_write', {
     p_token: t,
     p_table: table,
     p_action: 'delete',
@@ -201,7 +257,7 @@ export async function deleteProduct(id: number): Promise<void> {
 /** 访客点击购买时累加计数：走 SECURITY DEFINER 函数，无需登录。 */
 export async function trackClick(id: number): Promise<void> {
   try {
-    await cloud.database.rpc('increment_clicks', { pid: id })
+    await rpc('increment_clicks', { pid: id })
   } catch {
     /* 计数失败不影响跳转 */
   }

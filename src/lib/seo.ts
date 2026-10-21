@@ -10,6 +10,7 @@
  * 再改 config.ts 里的一个常量即可。
  */
 import { SITE_ORIGIN } from '../config'
+import { pagePath } from './router'
 
 export const BRAND = 'Oriental Essence'
 
@@ -59,7 +60,10 @@ export interface SeoInput {
 }
 
 export function applySeo({ title, description, path, image, jsonLd = [] }: SeoInput) {
-  const url = SITE_ORIGIN + (path.startsWith('/') ? path : '/' + path)
+  // CF Pages 会把 `/p/829` 308 到 `/p/829/`，canonical 必须写「跳转后的真身」，
+  // 否则等于让 Google 去收录一个重定向地址。
+  const realPath = pagePath(path.startsWith('/') ? path : '/' + path)
+  const url = SITE_ORIGIN + realPath
   const desc = clip(description)
 
   document.title = title
@@ -113,7 +117,7 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      item: SITE_ORIGIN + it.path,
+      item: SITE_ORIGIN + pagePath(it.path),
     })),
   }
 }

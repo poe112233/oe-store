@@ -15,6 +15,8 @@ export const OOPBUY_INVITE = 'TYZZSCDV0'
 /** 六大购买渠道，与 config.ts 的 PLATFORMS 一一对应 */
 export const BUY_CHANNELS = ['oopbuy', 'kakobuy', 'uidbuy', 'hipobuy', 'litbuy', 'boonbuy'] as const
 export type ChannelKey = (typeof BUY_CHANNELS)[number]
+/** links 里除六个购买渠道外，还多存一条卖家微店原链接（前台单独展示，不参与渠道统计） */
+export type LinkKey = ChannelKey | 'weidian'
 
 /** 从微店商品页 URL 里取出 itemID；也接受纯数字。 */
 export function weidianItemId(input: string): string | null {
@@ -40,22 +42,24 @@ export function weidianUrl(itemId: string): string {
   return `https://weidian.com/item.html?itemID=${itemId}`
 }
 
-/** 生成六个渠道的购买链接。 */
-export function buyLinks(itemId: string, invite = OOPBUY_INVITE): Record<ChannelKey, string> {
+/** 生成六个渠道的购买链接 + 微店原链接。 */
+export function buyLinks(itemId: string, invite = OOPBUY_INVITE): Record<LinkKey, string> {
   const id = String(itemId).trim()
   const encoded = encodeURIComponent(weidianUrl(id))
   return {
     oopbuy: `https://oopbuy.com/product/weidian/${id}?inviteCode=${invite}`,
-    kakobuy: `https://item.kakobuy.com/item/details?url=${encoded}`,
+    kakobuy: `https://kakobuy.com/item/details?url=${encoded}`,
     uidbuy: `https://www.uidbuy.com/product/3/${id}`,
     hipobuy: `https://hipobuy.com/product/weidian/${id}`,
     litbuy: `https://litbuy.com/product/weidian/${id}?linkSearch=true`,
     boonbuy: `https://boonbuy.com/product/weidian/${id}`,
+    // 卖家源页：详情页与购买面板里以「原链接」单独展示
+    weidian: weidianUrl(id),
   }
 }
 
 /** 从任意输入（微店链接 / 纯 itemID / 图床 URL）直接得到六渠道购买链接。 */
-export function buyLinksFrom(input: string, invite = OOPBUY_INVITE): Record<ChannelKey, string> | null {
+export function buyLinksFrom(input: string, invite = OOPBUY_INVITE): Record<LinkKey, string> | null {
   const id = weidianItemId(input) || itemIdFromImage(input)
   return id ? buyLinks(id, invite) : null
 }

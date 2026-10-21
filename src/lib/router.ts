@@ -71,9 +71,25 @@ export function useRoute(): Route {
   return route
 }
 
+/**
+ * 站点真实 URL 形态。
+ *
+ * CF Pages 对「目录索引」类路径（`/p/829` → `/p/829/index.html`）会先回 308 补尾斜杠，
+ * 所以浏览器的最终地址是 `/p/829/`。站内链接若还写无斜杠版本，爬虫每点一次就多吃一跳
+ * 重定向，canonical 也会指向一个「会跳转的地址」。这里统一产出带斜杠的真身：
+ *   `/p/829` → `/p/829/`、`/c/nike` → `/c/nike/`
+ * 首页 `/` 与 `/admin` 维持原样。
+ */
+export function pagePath(path: string): string {
+  if (!path || path.includes('?') || path.includes('#')) return path
+  if (/^\/(p|c)\/[^/]+$/.test(path)) return path + '/'
+  return path
+}
+
 export function go(path: string) {
-  if (readPath() === path) return
-  window.history.pushState(null, '', path)
+  const target = pagePath(path)
+  if (readPath() === target) return
+  window.history.pushState(null, '', target)
   emit()
 }
 
@@ -84,7 +100,7 @@ export function go(path: string) {
  */
 export function goProps(path: string, extra?: () => void): { href: string; onClick: (e: any) => void } {
   return {
-    href: path,
+    href: pagePath(path),
     onClick: (e: any) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
       e.preventDefault()

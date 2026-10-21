@@ -1,4 +1,4 @@
-import { cloud } from '../cloud'
+import { db, rpc } from './clouddb'
 
 /**
  * 后台「本地管理员账号」会话层。
@@ -65,7 +65,7 @@ function ensure<T>(res: { data: T; error: unknown }): T {
 
 export async function adminLogin(username: string, password: string): Promise<AdminIdentity> {
   const data = ensure(
-    (await cloud.database.rpc('oe_admin_login', {
+    (await rpc('oe_admin_login', {
       p_username: username,
       p_password: password,
     })) as { data: { token?: string; username?: string; display_name?: string } | null; error: unknown },
@@ -84,7 +84,7 @@ export async function adminMe(): Promise<AdminIdentity | null> {
   if (!token) return null
   try {
     const data = ensure(
-      (await cloud.database.rpc('oe_admin_me', { p_token: token })) as {
+      (await rpc('oe_admin_me', { p_token: token })) as {
         data: { username?: string; display_name?: string } | null
         error: unknown
       },
@@ -106,7 +106,7 @@ export async function adminLogout(): Promise<void> {
   setAdminToken(null)
   if (!token) return
   try {
-    await cloud.database.rpc('oe_admin_logout', { p_token: token })
+    await rpc('oe_admin_logout', { p_token: token })
   } catch {
     /* 本地已登出，服务端残留 token 到期自动失效 */
   }
@@ -116,7 +116,7 @@ export async function adminChangePassword(oldPassword: string, newPassword: stri
   const token = getAdminToken()
   if (!token) throw new Error('NOT_ADMIN')
   ensure(
-    (await cloud.database.rpc('oe_admin_change_password', {
+    (await rpc('oe_admin_change_password', {
       p_token: token,
       p_old: oldPassword,
       p_new: newPassword,
@@ -132,7 +132,7 @@ function mgmtToken(): string {
 
 export async function listAdminAccounts(): Promise<{ accounts: AdminAccountRow[]; current: string }> {
   const data = ensure(
-    (await cloud.database.rpc('oe_admin_list_accounts', { p_token: mgmtToken() })) as {
+    (await rpc('oe_admin_list_accounts', { p_token: mgmtToken() })) as {
       data: { accounts?: AdminAccountRow[]; current?: string } | null
       error: unknown
     },
@@ -142,7 +142,7 @@ export async function listAdminAccounts(): Promise<{ accounts: AdminAccountRow[]
 
 export async function saveAdminAccount(username: string, password: string, displayName: string): Promise<void> {
   ensure(
-    (await cloud.database.rpc('oe_admin_set_account', {
+    (await rpc('oe_admin_set_account', {
       p_token: mgmtToken(),
       p_username: username,
       p_password: password,
@@ -153,7 +153,7 @@ export async function saveAdminAccount(username: string, password: string, displ
 
 export async function deleteAdminAccount(username: string): Promise<void> {
   ensure(
-    (await cloud.database.rpc('oe_admin_delete_account', { p_token: mgmtToken(), p_username: username })) as {
+    (await rpc('oe_admin_delete_account', { p_token: mgmtToken(), p_username: username })) as {
       data: unknown
       error: unknown
     },
@@ -195,12 +195,12 @@ export async function listApiTokens(): Promise<ApiTokenRow[]> {
   const t = getAdminToken()
   if (!t) {
     const rows = ensure(
-      (await (cloud.database.from('api_tokens') as any).select('*')) as { data: ApiTokenRow[] | null; error: unknown },
+      (await (db.from('api_tokens') as any).select('*')) as { data: ApiTokenRow[] | null; error: unknown },
     )
     return (rows ?? []).slice().sort((a, b) => a.id - b.id)
   }
   const data = ensure(
-    (await cloud.database.rpc('oe_admin_api_tokens', { p_token: t })) as {
+    (await rpc('oe_admin_api_tokens', { p_token: t })) as {
       data: ApiTokenRow[] | null
       error: unknown
     },
@@ -212,7 +212,7 @@ export async function createApiToken(label: string): Promise<{ id: number; label
   const t = getAdminToken()
   if (t) {
     const data = ensure(
-      (await cloud.database.rpc('oe_admin_api_token_create', { p_token: t, p_label: label })) as {
+      (await rpc('oe_admin_api_token_create', { p_token: t, p_label: label })) as {
         data: { id?: number; label?: string; token?: string } | null
         error: unknown
       },
@@ -224,7 +224,7 @@ export async function createApiToken(label: string): Promise<{ id: number; label
   // 邮箱登录态：本地生成密钥，只把哈希 + 明文写进表（RLS 判定 is_admin()）
   const key = randomKey()
   const rows = ensure(
-    (await (cloud.database.from('api_tokens') as any)
+    (await (db.from('api_tokens') as any)
       .insert({
         label,
         token_hash: await sha256Hex(key),
@@ -243,7 +243,7 @@ export async function revokeApiToken(id: number, revoked: boolean): Promise<void
   const t = getAdminToken()
   if (t) {
     ensure(
-      (await cloud.database.rpc('oe_admin_api_token_revoke', {
+      (await rpc('oe_admin_api_token_revoke', {
         p_token: t,
         p_id: id,
         p_revoked: revoked,
@@ -252,7 +252,7 @@ export async function revokeApiToken(id: number, revoked: boolean): Promise<void
     return
   }
   ensure(
-    (await (cloud.database.from('api_tokens') as any).update({ revoked }).eq('id', id).select()) as {
+    (await (db.from('api_tokens') as any).update({ revoked }).eq('id', id).select()) as {
       data: unknown
       error: unknown
     },

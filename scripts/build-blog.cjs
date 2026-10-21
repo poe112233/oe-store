@@ -137,7 +137,9 @@ function prefix(lang) {
 
 /** 某篇文章的绝对 URL */
 function postUrl(post) {
-  return ORIGIN + prefix(post.lang) + '/' + post.slug
+  // CF Pages 会把 `/blog/x` 308 到 `/blog/x/`（目录索引），canonical / sitemap / hreflang
+  // 一律写跳转后的真身，避免把重定向地址交给爬虫收录。
+  return ORIGIN + prefix(post.lang) + '/' + post.slug + '/'
 }
 
 /** 为该文章生成 hreflang（只标注真实存在的翻译） */
@@ -340,9 +342,17 @@ function main() {
       .map((u) => '  <url><loc>' + u.loc + '</loc>' + (u.lastmod ? '<lastmod>' + u.lastmod + '</lastmod>' : '') + '</url>')
       .join('\n')
     if (xml.includes('</urlset>')) {
-      xml = xml.replace('</urlset>', rows + '\n</urlset>')
-      fs.writeFileSync(sitemapFile, xml)
-      console.log(`[blog] sitemap 追加 ${urls.length} 条（总条数 ${(xml.match(/<url>/g) || []).length}）`)
+      // 先剔除已存在的同 <loc>，避免多次构建把博客 URL 重复追加进 sitemap
+      const existing = new Set((xml.match(/<loc>[^<]+<\/loc>/g) || []).map((m) => m.slice(5, -6)))
+      const fresh = urls.filter((u) => !existing.has(u.loc))
+      if (fresh.length) {
+        const freshRows = fresh
+          .map((u) => '  <url><loc>' + u.loc + '</loc>' + (u.lastmod ? '<lastmod>' + u.lastmod + '</lastmod>' : '') + '</url>')
+          .join('\n')
+        xml = xml.replace('</urlset>', freshRows + '\n</urlset>')
+        fs.writeFileSync(sitemapFile, xml)
+      }
+      console.log(`[blog] sitemap 追加 ${fresh.length} 条（总条数 ${(xml.match(/<url>/g) || []).length}）`)
     }
   }
 }

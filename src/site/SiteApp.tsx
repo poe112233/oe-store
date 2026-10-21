@@ -7,7 +7,7 @@ import { groupLabel, primaryName, t, useLang } from '../i18n'
 import { fetchCategories, fetchProducts, fetchSettings } from '../lib/api'
 import { pickFeatured } from '../lib/featured'
 import type { BootData } from '../lib/boot'
-import { go, goProps, type Route } from '../lib/router'
+import { go, goProps, type Route, pagePath } from '../lib/router'
 import { applySeo, breadcrumbJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo'
 import { DEFAULT_SETTINGS, type Category, type Product, type SiteSettings } from '../types'
 import CategoryPage from './CategoryPage'
@@ -49,8 +49,16 @@ export default function SiteApp({ route, boot }: { route: Route; boot: BootData 
 
   const visibleProducts = useMemo(() => products.filter((p) => p.is_visible), [products])
 
-  // 精选推荐：每日轮换的确定性随机（按分类分散、偏好多图与热销款）
-  const featured = useMemo(() => pickFeatured(visibleProducts, categories), [visibleProducts, categories])
+  // 精选推荐：后台可切「手工指定 / 每日确定性随机」，数量也由后台决定
+  const featured = useMemo(
+    () =>
+      pickFeatured(visibleProducts, categories, {
+        mode: settings.featured_mode,
+        count: settings.featured_count,
+        ids: settings.featured_ids,
+      }),
+    [visibleProducts, categories, settings.featured_mode, settings.featured_count, settings.featured_ids],
+  )
 
   const searchResults = useMemo(() => {
     const kw = q.trim().toLowerCase()
@@ -100,15 +108,26 @@ export default function SiteApp({ route, boot }: { route: Route; boot: BootData 
         path,
         image: Array.isArray(currentProduct.images) ? currentProduct.images[0] : undefined,
         jsonLd: [
+          // ⚠️ 这里绝不能声明 @type: Product。
+          // 商品没有价格（products 表无 price 列），Google 的产品摘要要求 Product 必须带
+          // offers / review / aggregateRating 之一，否则按「严重问题」报错并剥夺富媒体结果。
+          // 2026-10-18 事故：此前的 Product 标记导致 GSC「产品摘要：应指定 offers、
+          // review 或 aggregateRating」共 173 个受影响页面（经站群 /p/* 的 301 归属放大）。
+          // 改用 ItemPage：语义准确、无任何富媒体强制字段，也不会被误判成商品卡片。
           {
             '@context': 'https://schema.org',
-            '@type': 'Product',
-            name,
+            '@type': 'ItemPage',
+            name: `${name} — ${catName}`,
             description: `${name} — ${grp ? grp + ' · ' : ''}${catName}, curated by Oriental Essence.`,
-            category: catName,
-            brand: { '@type': 'Brand', name: catName },
-            image: (currentProduct.images || []).slice(0, 4),
-            url: `${SITE_ORIGIN}${path}`,
+            url: `${SITE_ORIGIN}${pagePath(path)}`,
+            primaryImageOfPage: (currentProduct.images || []).length
+              ? { '@type': 'ImageObject', url: (currentProduct.images || [])[0] }
+              : undefined,
+            about: {
+              '@type': 'Thing',
+              name,
+              category: catName,
+            },
           },
           breadcrumbJsonLd([
             { name: 'Home', path: '/' },
@@ -134,7 +153,7 @@ export default function SiteApp({ route, boot }: { route: Route; boot: BootData 
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',
             name: `${title} — ${grp}`,
-            url: `${SITE_ORIGIN}${path}`,
+            url: `${SITE_ORIGIN}${pagePath(path)}`,
             description: `Oriental Essence ${title} collection — ${count} pieces.`,
           },
           breadcrumbJsonLd([
