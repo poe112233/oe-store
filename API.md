@@ -172,6 +172,7 @@ rpc("oe_api_product_save", p_data={"id": 5, "sold_count": 350})
 | --- | --- |
 | `{"error":{"code":"INVALID_API_KEY"}}` | 密钥错、已停用或已删除 |
 | `{"error":{"code":"BAD_ID"}}` | `p_id` 缺失或不是数字 |
+| `{"error":{"code":"NAME_EN_REQUIRED"}}` | 新建商品时没给 `name_en` |
 | `{"error":{"code":"BAD_TABLE"}}` | 调用了不存在的表（接口只开放商品/分类） |
 | `{"error":{"code":"SERVER_ERROR"}}` | 服务端异常，稍后重试 |
 
